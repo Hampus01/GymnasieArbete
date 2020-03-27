@@ -5,6 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="rampage" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="rampage" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\Dependencies\0Harmony.dll</HintPath>
     </Reference>
