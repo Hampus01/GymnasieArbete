@@ -82,6 +82,21 @@ namespace ModItem
     {
         internal static void Init()
         {
+            On.RoR2.HealthComponent.TakeDamage += (orig, self, damageInfo) =>
+            {
+                DamageInfo damageI = new DamageInfo();
+                damageI.damage = 10;
+                damageI.procCoefficient = 0;
+                damageI.crit = false;
+                Chat.AddMessage("Damge");
+
+                if(damageInfo.attacker.GetComponent<HealthComponent>() != null)
+                {
+                    damageInfo.attacker.GetComponent<HealthComponent>().TakeDamage(damageI);
+                }
+
+                orig(self, damageInfo);
+            };
 
         }
     }
