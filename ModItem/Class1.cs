@@ -5,6 +5,7 @@ using R2API.Utils;
 using System.Reflection;
 using RoR2;
 using UnityEngine;
+using EntityStates;
 
 
 
@@ -15,28 +16,52 @@ namespace ModItem
     [R2APISubmoduleDependency(nameof(ItemAPI), nameof(ItemDropAPI), nameof(ResourcesAPI))]
     public class Class1 : BaseUnityPlugin
     {
-        internal new static ManualLogSource Logger;
-
-        public void Awake()
-        {
-            Logger = base.Logger;
-
-            Assets.Init();
-            Hooks.Init();
-
-        }
-    }
-
-    internal static class Assets
-    {
         internal static GameObject BiscoLeashPrefab;
-        internal static ItemIndex BiscoLeashItemIndex;
+        internal static ItemIndex ThornsPotion;
 
         private const string ModPrefix = "@CustomItem:";
         private const string PrefabPath = ModPrefix + "Assets/Import/belt/belt.prefab";
         private const string IconPath = ModPrefix + "Assets/Import/belt_icon/belt_icon.png";
 
-        internal static void Init()
+        Hooks hooks;
+        Assets assets;
+
+        public void Awake()
+        {
+            hooks = new Hooks();
+            assets = new Assets();
+
+            Hooks();
+            Assets();
+        }
+        internal void Hooks()
+        {
+            On.RoR2.HealthComponent.TakeDamage += (orig, self, damageInfo) =>
+            {
+                if (self.body.inventory?.GetItemCount(ThornsPotion) > 0)
+                {
+                    Chat.AddMessage("Damage");
+                    int procChance = Random.Range(1, 10);
+
+                    if (procChance <= 3)
+                    {
+                        DamageInfo myDamageInfo = new DamageInfo()
+                        {
+                            damage = damageInfo.damage * self.body.inventory.GetItemCount(ThornsPotion),
+                            attacker = self.body.gameObject,
+                            position = damageInfo.attacker.transform.position,
+                            damageType = DamageType.BypassArmor,
+                            damageColorIndex = DamageColorIndex.Item,
+                        };
+
+                        damageInfo.attacker.GetComponent<HealthComponent>()?.TakeDamage(myDamageInfo);
+                    }
+                }
+
+                orig(self, damageInfo);
+            };
+        }
+        public void Assets()
         {
             //using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CustomItem.rampage"))
             //{
@@ -49,13 +74,13 @@ namespace ModItem
 
             ItemDef itemDef = new ItemDef
             {
-                name = "ThornsPotion", 
+                name = "ThornsPotion",
                 tier = ItemTier.Tier2,
                 pickupModelPath = PrefabPath,
                 pickupIconPath = IconPath,
                 nameToken = "Thorn's Potion",
                 pickupToken = "Return to sender",
-                descriptionToken = "Chande to retrun damage delt to you",
+                descriptionToken = "Have a 30% chance to return the damage delt to you (+100%)",
                 loreToken = "Empty",
                 tags = new[]
                 {
@@ -71,33 +96,20 @@ namespace ModItem
             //itemDisplayRules[0].localAngles = new Vector3(0f, 180f, 0f); // rotate the model
             //itemDisplayRules[0].localPos = new Vector3(-0.35f, -0.1f, 0f); // position offset relative to the childName, here the survivor Chest
 
-            var biscoLeash = new R2API.CustomItem(itemDef, itemDisplayRules);
+            var thornsPotion = new CustomItem(itemDef, itemDisplayRules);
 
-            BiscoLeashItemIndex = ItemAPI.Add(biscoLeash); // ItemAPI sends back the ItemIndex of your item
+            Class1.ThornsPotion = ItemAPI.Add(thornsPotion); // ItemAPI sends back the ItemIndex of your item
         }
+    }
+
+    public class Assets
+    {
 
     }
 
+
     public class Hooks
     {
-        internal static void Init()
-        {
-            On.RoR2.HealthComponent.TakeDamage += (orig, self, damageInfo) =>
-            {
-                DamageInfo damageI = new DamageInfo();
-                damageI.damage = 10;
-                damageI.procCoefficient = 0;
-                damageI.crit = false;
-                Chat.AddMessage("Damge");
 
-                if(damageInfo.attacker.GetComponent<HealthComponent>() != null)
-                {
-                    damageInfo.attacker.GetComponent<HealthComponent>().TakeDamage(damageI);
-                }
-
-                orig(self, damageInfo);
-            };
-
-        }
     }
 }
