@@ -5,9 +5,6 @@ using R2API.Utils;
 using System.Reflection;
 using RoR2;
 using UnityEngine;
-using EntityStates;
-
-
 
 namespace ModItem
 {
@@ -18,10 +15,6 @@ namespace ModItem
     {
         internal static GameObject BiscoLeashPrefab;
         internal static ItemIndex ThornsPotion;
-
-        private const string ModPrefix = "@CustomItem:";
-        private const string PrefabPath = ModPrefix + "Assets/Import/belt/belt.prefab";
-        private const string IconPath = ModPrefix + "Assets/Import/belt_icon/belt_icon.png";
 
         Hooks hooks;
         Assets assets;
@@ -34,6 +27,7 @@ namespace ModItem
             Hooks();
             Assets();
         }
+
         internal void Hooks()
         {
             On.RoR2.HealthComponent.TakeDamage += (orig, self, damageInfo) =>
@@ -63,14 +57,19 @@ namespace ModItem
         }
         public void Assets()
         {
-            //using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CustomItem.rampage"))
-            //{
-            //    var bundle = AssetBundle.LoadFromStream(stream);
-            //    var provider = new AssetBundleResourcesProvider(ModPrefix.TrimEnd(':'), bundle);
-            //    ResourcesAPI.AddProvider(provider);
 
-            //    BiscoLeashPrefab = bundle.LoadAsset<GameObject>("Assets/Import/belt/belt.prefab");
-            //}
+            const string ModPrefix = "@CustomItem:";
+            const string PrefabPath = ModPrefix + "Assets/Import/belt/belt.prefab";
+            const string IconPath = ModPrefix + "Assets/Import/belt_icon/belt_icon.png";
+
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ModItem.rampage"))
+            {
+                var bundle = AssetBundle.LoadFromStream(stream);
+                var provider = new AssetBundleResourcesProvider(ModPrefix.TrimEnd(':'), bundle);
+                ResourcesAPI.AddProvider(provider);
+
+                BiscoLeashPrefab = bundle.LoadAsset<GameObject>("Assets/Import/belt/belt.prefab");
+            }
 
             ItemDef itemDef = new ItemDef
             {
@@ -89,12 +88,12 @@ namespace ModItem
                 }
             };
 
-            ItemDisplayRule[] itemDisplayRules = null; // keep this null if you don't want the item to show up on the survivor 3d model. You can also have multiple rules !
-            //itemDisplayRules[0].followerPrefab = BiscoLeashPrefab; // the prefab that will show up on the survivor
-            //itemDisplayRules[0].childName = "Chest"; // this will define the starting point for the position of the 3d model, you can see what are the differents name available in the prefab model of the survivors
-            //itemDisplayRules[0].localScale = new Vector3(0.15f, 0.15f, 0.15f); // scale the model
-            //itemDisplayRules[0].localAngles = new Vector3(0f, 180f, 0f); // rotate the model
-            //itemDisplayRules[0].localPos = new Vector3(-0.35f, -0.1f, 0f); // position offset relative to the childName, here the survivor Chest
+            ItemDisplayRule[] itemDisplayRules = new ItemDisplayRule[1]; // keep this null if you don't want the item to show up on the survivor 3d model. You can also have multiple rules !
+            itemDisplayRules[0].followerPrefab = BiscoLeashPrefab; // the prefab that will show up on the survivor
+            itemDisplayRules[0].childName = "Chest"; // this will define the starting point for the position of the 3d model, you can see what are the differents name available in the prefab model of the survivors
+            itemDisplayRules[0].localScale = new Vector3(0.15f, 0.15f, 0.15f); // scale the model
+            itemDisplayRules[0].localAngles = new Vector3(0f, 180f, 0f); // rotate the model
+            itemDisplayRules[0].localPos = new Vector3(-0.35f, -0.1f, 0f); // position offset relative to the childName, here the survivor Chest
 
             var thornsPotion = new CustomItem(itemDef, itemDisplayRules);
 
