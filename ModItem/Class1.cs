@@ -32,23 +32,20 @@ namespace ModItem
         {
             On.RoR2.HealthComponent.TakeDamage += (orig, self, damageInfo) =>
             {
-                if (self.body.inventory?.GetItemCount(ThornsPotion) > 0)
+                if (self.body.inventory?.GetItemCount(ThornsPotion) > 0 && damageInfo.attacker != self.body.gameObject)
                 {
-                    Chat.AddMessage("Damage");
                     int procChance = Random.Range(1, 10);
 
                     if (procChance <= 3)
                     {
-                        DamageInfo myDamageInfo = new DamageInfo()
+                        damageInfo.attacker.GetComponent<HealthComponent>()?.TakeDamage(new DamageInfo
                         {
                             damage = damageInfo.damage * self.body.inventory.GetItemCount(ThornsPotion),
                             attacker = self.body.gameObject,
                             position = damageInfo.attacker.transform.position,
                             damageType = DamageType.BypassArmor,
                             damageColorIndex = DamageColorIndex.Item,
-                        };
-
-                        damageInfo.attacker.GetComponent<HealthComponent>()?.TakeDamage(myDamageInfo);
+                        });
                     }
                 }
 
